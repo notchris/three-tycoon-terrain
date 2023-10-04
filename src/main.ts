@@ -6,6 +6,7 @@ import { DiamondSquareGeometry } from "./diamond-square.three";
 import { terrainShader } from "./terrain-shader";
 import { justAddWater } from "./water";
 import { flattenTerrain, lowerTerrain, raiseTerrain } from "./terrain-utils";
+import createSurfaceSampler from "./surface-sample";
 
 // Scene
 const scene = new THREE.Scene();
@@ -20,7 +21,7 @@ document.body.appendChild(renderer.domElement);
 
 // Camera
 const aspect = innerWidth / innerHeight;
-const d = 5;
+const d = 10;
 const camera = new THREE.OrthographicCamera(
   -d * aspect,
   d * aspect,
@@ -29,7 +30,7 @@ const camera = new THREE.OrthographicCamera(
   0.1,
   1000
 );
-camera.position.set(20, 20, 20); // all components equal
+camera.position.set(30, 30, 30); // all components equal
 camera.lookAt(scene.position); // or the origin
 
 // Controls
@@ -64,7 +65,7 @@ texture.repeat.set(20, 20);
 
 let selectionSize = 3;
 const selector = new THREE.Mesh(
-  new THREE.BoxGeometry(3, 10, 3),
+  new THREE.BoxGeometry(3, 3, 10),
   new THREE.MeshBasicMaterial({ wireframe: true })
 );
 scene.add(selector);
@@ -93,6 +94,9 @@ const o = new THREE.Mesh(geometry, shader);
 o.geometry.computeBoundingBox();
 scene.add(o);
 o.rotation.x = -Math.PI / 2;
+
+// const surface = await createSurfaceSampler(o);
+// scene.add(surface);
 
 // Water
 const water = justAddWater(width, height);
@@ -154,7 +158,7 @@ window.addEventListener("keydown", (event) => {
     case "q":
       if (event.repeat) return;
       if (!hasIntersect) return;
-      raiseTerrain(o, face, faceIndex, 0.5, scene);
+      raiseTerrain(o, face, faceIndex, 0.5, scene, selector);
       break;
     case "w":
       if (event.repeat) return;

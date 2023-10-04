@@ -5,80 +5,32 @@ export function raiseTerrain(
   face: THREE.Face,
   faceIndex: number,
   amount: number = 0.5,
-  scene: THREE.Scene
+  scene: THREE.Scene,
+  selector: THREE.Mesh
 ) {
   const positionAttribute = terrain.geometry.getAttribute("position");
-  const positions = positionAttribute.array;
-  const indices = (terrain.geometry.getIndex() as THREE.BufferAttribute).array;
 
-  const faceVertices = [
-    indices[faceIndex * 3],
-    indices[faceIndex * 3 + 1],
-    indices[faceIndex * 3 + 2],
-  ];
+  const verticesInUpdatedBox = [];
 
-  const neighboringFaces = [];
+  const box3 = new THREE.Box3().setFromObject(selector);
+  box3.applyMatrix4(terrain.matrixWorld);
+  const helper = new THREE.Box3Helper(box3);
+  scene.add(helper);
 
-  for (let i = 0; i < indices.length; i += 3) {
-    if (i === faceIndex * 3) {
-      continue; // Skip the same face
-    }
+  // Iterate through all the vertices
+  for (let i = 0; i < positionAttribute.count; i++) {
+    // Get the vertex position
+    const vertex = new THREE.Vector3();
+    vertex.fromBufferAttribute(positionAttribute, i);
 
-    const otherFaceVertices = [indices[i], indices[i + 1], indices[i + 2]];
-
-    // Check if the faces share at least two vertices
-    const sharedVertices = faceVertices.filter((vertexIndex) =>
-      otherFaceVertices.includes(vertexIndex)
-    );
-
-    if (sharedVertices.length >= 2) {
-      neighboringFaces.push(i / 3); // Add the index of the neighboring face
+    // Check if the vertex is within the updated Box3
+    if (box3.containsPoint(vertex)) {
+      verticesInUpdatedBox.push(i); // Store the index of the vertex
     }
   }
 
-  console.log(neighboringFaces);
-
-  neighboringFaces.forEach((index) => {
-    const faceVertices = [
-      indices[faceIndex * 3],
-      indices[faceIndex * 3 + 1],
-      indices[faceIndex * 3 + 2],
-    ];
-
-    const a = indices[faceIndex * 3];
-    const b = indices[faceIndex * 3 + 1];
-    const c = indices[faceIndex * 3 + 2];
-
-    positions[a * 3 + 2] = amount;
-    positions[b * 3 + 2] = amount;
-    positions[c * 3 + 2] = amount;
-  });
-
-  positionAttribute.needsUpdate = true;
-
-  //   const a = face.a;
-  //   const b = face.b;
-  //   const c = face.c;
-
-  //   // Get the position attribute buffer
-  //   const positionAttribute = terrain.geometry.getAttribute("position");
-  //   const positions = positionAttribute.array;
-
-  //   // Update the vertices' positions
-
-  //   //   positions[a * 3] // x1
-  //   //   positions[a * 3 + 1] // y1
-  //   positions[a * 3 + 2] += amount; // z1
-
-  //   //   positions[b * 3] // x2
-  //   //   positions[b * 3 + 1] // y2
-  //   positions[b * 3 + 2] += amount; // z2
-
-  //   //   positions[c * 3] // x3
-  //   //   positions[c * 3 + 1] // y3
-  //   positions[c * 3 + 2] += amount; // z3
-
-  //   positionAttribute.needsUpdate = true;
+  // Now, 'verticesInUpdatedBox' contains the indices of vertices within the updated Box3
+  console.log(verticesInUpdatedBox);
 }
 
 export function lowerTerrain(
